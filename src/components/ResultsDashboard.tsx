@@ -1,5 +1,5 @@
 import React from 'react';
-import { BarChart3, AlertTriangle } from 'lucide-react';
+import { BarChart3, AlertTriangle, Sparkles } from 'lucide-react';
 import type { ComparisonResult } from '../types';
 import { ComparisonSummary } from './ComparisonSummary';
 import { LightnessComparisonBar } from './LightnessComparisonBar';
@@ -16,7 +16,10 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
   imageUrlA,
   imageUrlB,
 }) => {
-  const { personA, personB } = result;
+  const { personA, personB, lighterPerson, percentageDifference } = result;
+
+  const isAFairer = lighterPerson === 'A';
+  const isBFairer = lighterPerson === 'B';
 
   const allWarnings = [
     ...personA.warnings.map(w => ({ person: 'A', message: w })),
@@ -36,7 +39,7 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
             Skin Tone Comparison Results
           </h2>
           <p className="mt-2 text-gray-600">
-            Comparison of the selected skin regions from both uploaded photos.
+            Detailed measurement of sampled skin lightness and relative fairness percentage.
           </p>
         </div>
 
@@ -54,7 +57,7 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
           </div>
         )}
 
-        {/* Main comparison card */}
+        {/* Main comparison card with Fairer statement */}
         <div className="mb-8">
           <ComparisonSummary result={result} />
         </div>
@@ -62,18 +65,35 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
         {/* Side-by-side cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           {/* Person A */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="px-5 py-3 bg-indigo-50 border-b border-gray-100">
-              <h3 className="font-semibold text-indigo-900">Person A</h3>
+          <div className={`bg-white rounded-2xl shadow-sm border overflow-hidden transition-all ${
+            isAFairer ? 'border-emerald-300 ring-2 ring-emerald-100' : 'border-gray-100'
+          }`}>
+            <div className={`px-5 py-3 border-b flex items-center justify-between ${
+              isAFairer ? 'bg-emerald-50/70 border-emerald-100' : 'bg-indigo-50 border-gray-100'
+            }`}>
+              <h3 className="font-semibold text-indigo-900 flex items-center gap-2">
+                Person A
+              </h3>
+              {isAFairer && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-emerald-600 text-white text-xs font-bold rounded-full shadow-xs">
+                  <Sparkles className="w-3 h-3" />
+                  {percentageDifference.toFixed(1)}% Fairer
+                </span>
+              )}
+              {isBFairer && (
+                <span className="px-2.5 py-0.5 bg-gray-200 text-gray-700 text-xs font-medium rounded-full">
+                  Baseline
+                </span>
+              )}
             </div>
+
             <div className="p-5">
               <div className="rounded-xl overflow-hidden bg-gray-100 mb-4 relative">
                 <img
                   src={imageUrlA}
                   alt="Person A uploaded photo"
-                  className="w-full h-40 object-contain"
+                  className="w-full h-44 object-contain"
                 />
-                {/* Selection overlay indicator */}
                 <div className="absolute bottom-2 right-2 bg-indigo-600/80 text-white text-xs px-2 py-1 rounded-md">
                   Region selected
                 </div>
@@ -81,23 +101,26 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
 
               {/* Color swatch */}
               <div
-                className="h-12 rounded-lg mb-3 border border-gray-200"
+                className="h-12 rounded-lg mb-3 border border-gray-200 shadow-inner"
                 style={{ backgroundColor: personA.hexColor }}
                 role="img"
                 aria-label={`Person A skin color: ${personA.hexColor}`}
               />
 
               <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-500">L* Lightness</span>
-                  <span className="font-semibold text-gray-800">{personA.medianLAB.L.toFixed(1)}</span>
+                <div className="flex justify-between items-center py-1 border-b border-gray-50">
+                  <span className="text-gray-600 font-medium">Skin Fairness (Lightness L*)</span>
+                  <span className={`font-bold text-base ${isAFairer ? 'text-emerald-600' : 'text-gray-900'}`}>
+                    {personA.medianLAB.L.toFixed(1)}
+                    {isAFairer && ` (+${percentageDifference.toFixed(1)}%)`}
+                  </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">a* (green–red)</span>
+                  <span className="text-gray-500">a* (green–red tint)</span>
                   <span className="font-medium text-gray-700">{personA.medianLAB.a.toFixed(1)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">b* (blue–yellow)</span>
+                  <span className="text-gray-500">b* (blue–yellow tint)</span>
                   <span className="font-medium text-gray-700">{personA.medianLAB.b.toFixed(1)}</span>
                 </div>
                 <div className="flex justify-between">
@@ -107,7 +130,7 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">HEX</span>
+                  <span className="text-gray-500">HEX Code</span>
                   <span className="font-mono text-gray-700">{personA.hexColor}</span>
                 </div>
                 <div className="flex justify-between">
@@ -119,16 +142,34 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
           </div>
 
           {/* Person B */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="px-5 py-3 bg-violet-50 border-b border-gray-100">
-              <h3 className="font-semibold text-violet-900">Person B</h3>
+          <div className={`bg-white rounded-2xl shadow-sm border overflow-hidden transition-all ${
+            isBFairer ? 'border-emerald-300 ring-2 ring-emerald-100' : 'border-gray-100'
+          }`}>
+            <div className={`px-5 py-3 border-b flex items-center justify-between ${
+              isBFairer ? 'bg-emerald-50/70 border-emerald-100' : 'bg-violet-50 border-gray-100'
+            }`}>
+              <h3 className="font-semibold text-violet-900 flex items-center gap-2">
+                Person B
+              </h3>
+              {isBFairer && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-emerald-600 text-white text-xs font-bold rounded-full shadow-xs">
+                  <Sparkles className="w-3 h-3" />
+                  {percentageDifference.toFixed(1)}% Fairer
+                </span>
+              )}
+              {isAFairer && (
+                <span className="px-2.5 py-0.5 bg-gray-200 text-gray-700 text-xs font-medium rounded-full">
+                  Baseline
+                </span>
+              )}
             </div>
+
             <div className="p-5">
               <div className="rounded-xl overflow-hidden bg-gray-100 mb-4 relative">
                 <img
                   src={imageUrlB}
                   alt="Person B uploaded photo"
-                  className="w-full h-40 object-contain"
+                  className="w-full h-44 object-contain"
                 />
                 <div className="absolute bottom-2 right-2 bg-violet-600/80 text-white text-xs px-2 py-1 rounded-md">
                   Region selected
@@ -136,23 +177,26 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
               </div>
 
               <div
-                className="h-12 rounded-lg mb-3 border border-gray-200"
+                className="h-12 rounded-lg mb-3 border border-gray-200 shadow-inner"
                 style={{ backgroundColor: personB.hexColor }}
                 role="img"
                 aria-label={`Person B skin color: ${personB.hexColor}`}
               />
 
               <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-500">L* Lightness</span>
-                  <span className="font-semibold text-gray-800">{personB.medianLAB.L.toFixed(1)}</span>
+                <div className="flex justify-between items-center py-1 border-b border-gray-50">
+                  <span className="text-gray-600 font-medium">Skin Fairness (Lightness L*)</span>
+                  <span className={`font-bold text-base ${isBFairer ? 'text-emerald-600' : 'text-gray-900'}`}>
+                    {personB.medianLAB.L.toFixed(1)}
+                    {isBFairer && ` (+${percentageDifference.toFixed(1)}%)`}
+                  </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">a* (green–red)</span>
+                  <span className="text-gray-500">a* (green–red tint)</span>
                   <span className="font-medium text-gray-700">{personB.medianLAB.a.toFixed(1)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">b* (blue–yellow)</span>
+                  <span className="text-gray-500">b* (blue–yellow tint)</span>
                   <span className="font-medium text-gray-700">{personB.medianLAB.b.toFixed(1)}</span>
                 </div>
                 <div className="flex justify-between">
@@ -162,7 +206,7 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">HEX</span>
+                  <span className="text-gray-500">HEX Code</span>
                   <span className="font-mono text-gray-700">{personB.hexColor}</span>
                 </div>
                 <div className="flex justify-between">
@@ -203,14 +247,14 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
         </div>
 
         {/* Additional interpretation */}
-        <div className="bg-gray-50 rounded-xl p-5 text-sm text-gray-600 leading-relaxed">
+        <div className="bg-gray-50 rounded-2xl p-5 text-sm text-gray-600 leading-relaxed border border-gray-100">
           {Math.abs(personA.medianLAB.L - personB.medianLAB.L) < 3 ? (
             <p>
-              The sampled regions have similar measured lightness values. Minor differences may be due to lighting, exposure, or camera conditions rather than actual differences in skin tone.
+              Dono sampled regions ki lightness values lagbhag barabar hain (similar values). Minor difference ambient lighting, exposure ya camera white balance ki wajah se ho sakta hai.
             </p>
           ) : (
             <p>
-              The sampled skin region in Person {result.lighterPerson === 'A' ? 'A' : 'B'}'s photo has a higher measured L* value than Person {result.lighterPerson === 'A' ? 'B' : 'A'}'s photo. Lighting, exposure, white balance, shadows, makeup, and image processing may affect this result. These measurements describe the visible pixel colors in the uploaded images and are not judgments about beauty, identity, or natural skin tone.
+              Photo analysis ke mutabik <strong>Person {lighterPerson === 'A' ? 'A' : 'B'}</strong> ki sampled skin region ka measured lightness score (L*) <strong>Person {lighterPerson === 'A' ? 'B' : 'A'}</strong> se <strong>{percentageDifference.toFixed(1)}%</strong> zyada fair / light paya gaya hai. Yeh score selected image pixels par adharit hai jisme lighting aur camera exposure ka asar ho sakta hai.
             </p>
           )}
         </div>

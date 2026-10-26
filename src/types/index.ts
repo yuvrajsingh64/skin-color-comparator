@@ -38,9 +38,11 @@ export interface ComparisonResult {
   personA: SkinAnalysisResult;
   personB: SkinAnalysisResult;
   lighterPerson: 'A' | 'B' | 'equal';
+  fairerPerson: 'A' | 'B' | 'equal';
   percentageDifference: number;
   canCalculatePercentage: boolean;
   explanation: string;
+  hinglishExplanation: string;
 }
 
 export type AnalysisState = 'idle' | 'uploading' | 'selecting' | 'analyzing' | 'complete' | 'error';

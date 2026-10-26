@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { calculateComparison, formatPercentage } from '../src/utils/comparisonCalculator';
-import { SkinAnalysisResult } from '../src/types';
+import type { SkinAnalysisResult } from '../src/types';
 
 function createMockSkinResult(L: number, a = 12, b = 18, hex = '#d2a688'): SkinAnalysisResult {
   return {
@@ -23,9 +23,11 @@ describe('comparisonCalculator', () => {
       const result = calculateComparison(personA, personB);
 
       expect(result.lighterPerson).toBe('A');
+      expect(result.fairerPerson).toBe('A');
       expect(result.canCalculatePercentage).toBe(true);
       expect(result.percentageDifference).toBeCloseTo(50.0, 1);
-      expect(result.explanation).toContain("Person A's sampled skin region has 50.0% higher measured lightness than Person B's.");
+      expect(result.explanation).toContain('Person A is 50.0% fairer than Person B');
+      expect(result.hinglishExplanation).toContain('Person A, Person B ki tulna me 50.0% zyada fair');
     });
 
     it('handles fractional percentage differences correctly', () => {
@@ -37,7 +39,7 @@ describe('comparisonCalculator', () => {
 
       expect(result.lighterPerson).toBe('A');
       expect(result.percentageDifference).toBeCloseTo(8.333, 2);
-      expect(result.explanation).toContain('8.3%');
+      expect(result.explanation).toContain('8.3% fairer');
     });
   });
 
@@ -50,9 +52,11 @@ describe('comparisonCalculator', () => {
       const result = calculateComparison(personA, personB);
 
       expect(result.lighterPerson).toBe('B');
+      expect(result.fairerPerson).toBe('B');
       expect(result.canCalculatePercentage).toBe(true);
       expect(result.percentageDifference).toBeCloseTo(50.0, 1);
-      expect(result.explanation).toContain("Person B's sampled skin region has 50.0% higher measured lightness than Person A's.");
+      expect(result.explanation).toContain('Person B is 50.0% fairer than Person A');
+      expect(result.hinglishExplanation).toContain('Person B, Person A ki tulna me 50.0% zyada fair');
     });
   });
 
@@ -64,9 +68,10 @@ describe('comparisonCalculator', () => {
       const result = calculateComparison(personA, personB);
 
       expect(result.lighterPerson).toBe('equal');
+      expect(result.fairerPerson).toBe('equal');
       expect(result.canCalculatePercentage).toBe(true);
       expect(result.percentageDifference).toBe(0);
-      expect(result.explanation).toBe('Both sampled regions have the same measured L* lightness.');
+      expect(result.explanation).toContain('Both sampled regions have the same measured skin lightness');
     });
 
     it('treats floating point values within 0.005 tolerance as equal', () => {
@@ -110,17 +115,14 @@ describe('comparisonCalculator', () => {
       const person1 = createMockSkinResult(70);
       const person2 = createMockSkinResult(50);
 
-      // Comparison with Person 1 as A, Person 2 as B: (70 - 50) / 50 = 40%
       const resA = calculateComparison(person1, person2);
       expect(resA.lighterPerson).toBe('A');
       expect(resA.percentageDifference).toBeCloseTo(40.0, 1);
 
-      // Swapped: Person 2 as A, Person 1 as B: (70 - 50) / 50 = 40%
       const resB = calculateComparison(person2, person1);
       expect(resB.lighterPerson).toBe('B');
       expect(resB.percentageDifference).toBeCloseTo(40.0, 1);
 
-      // The percentage difference remains mathematically identical because the lower reference is identical
       expect(resA.percentageDifference).toBe(resB.percentageDifference);
     });
   });

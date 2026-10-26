@@ -7,7 +7,7 @@ import type { SkinAnalysisResult, ComparisonResult } from '../types';
  *   percentage = ((higher - lower) / lower) * 100
  *
  * The L* values come from the CIELAB color space and represent perceptual lightness
- * in the measured image, NOT objective skin tone or beauty.
+ * in the measured image.
  */
 export function calculateComparison(
   personA: SkinAnalysisResult,
@@ -22,9 +22,11 @@ export function calculateComparison(
       personA,
       personB,
       lighterPerson: 'equal',
+      fairerPerson: 'equal',
       percentageDifference: 0,
       canCalculatePercentage: true,
-      explanation: 'Both sampled regions have the same measured L* lightness.',
+      explanation: 'Both sampled regions have the same measured skin lightness (0.0% difference).',
+      hinglishExplanation: 'Dono persons ka skin tone barabar (equal) hai (0.0% difference).',
     };
   }
 
@@ -38,9 +40,11 @@ export function calculateComparison(
       personA,
       personB,
       lighterPerson,
+      fairerPerson: lighterPerson,
       percentageDifference: 0,
       canCalculatePercentage: false,
       explanation: `The relative percentage cannot be calculated reliably because Person ${lighterPerson === 'A' ? 'B' : 'A'}'s measured L* value (${lower.toFixed(1)}) is too close to zero.`,
+      hinglishExplanation: `Person ${lighterPerson === 'A' ? 'B' : 'A'} ki skin lightness 0 ke kareeb hone ki wajah se percentage calculate nahi kiya ja sakta.`,
     };
   }
 
@@ -54,9 +58,11 @@ export function calculateComparison(
     personA,
     personB,
     lighterPerson,
+    fairerPerson: lighterPerson,
     percentageDifference,
     canCalculatePercentage: true,
-    explanation: `${lighterName}'s sampled skin region has ${percentageDifference.toFixed(1)}% higher measured lightness than ${darkerName}'s.`,
+    explanation: `${lighterName} is ${percentageDifference.toFixed(1)}% fairer than ${darkerName} (higher measured skin lightness).`,
+    hinglishExplanation: `${lighterName}, ${darkerName} ki tulna me ${percentageDifference.toFixed(1)}% zyada fair (light) hai.`,
   };
 }
 
